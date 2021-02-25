@@ -68,3 +68,21 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `yarn build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+### clone
+https://github.com/VolodymyrOsinchuk/bakery-hooks.git
+
+### create a new repository on the command line
+echo "# bakery-hooks" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/VolodymyrOsinchuk/bakery-hooks.git
+git push -u origin main
+
+### push an existing repository from the command line
+git remote add origin https://github.com/VolodymyrOsinchuk/bakery-hooks.git
+git branch -M main
+git push -u origin main
