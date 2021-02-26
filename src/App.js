@@ -22,27 +22,26 @@ const useStyle = makeStyles((theme) => ({
 
 const names = ['add','list', 'pay'];
 
-function App(props) {
+function App() {
   const classes = useStyle();
   const [items, setItems] = useState([]);
   const [activeTab, setActiveTab] = useState(names[0]);
 
-  // console.log('items >>>', items);
-  // console.log('props App', props);
-
   const add = (name, price) => {
-    console.log('app name',name);
-    console.log('app price',price);
     const obj = {
       name: name,
       price: price
     }
-    console.log('obj', obj);
-
     const list = items;
     list.push(obj);
     console.log('list', list);
     setItems(list);
+  }
+
+  const deletelist = (index) => {
+    const list = [...items];
+    list.splice(index, 1)
+    setItems(list)
   }
 
   const renderContent = () => {
@@ -50,7 +49,7 @@ function App(props) {
       case 'add':
         return <Add addItem={add}></Add>
       case 'list':
-      return <List listItems={items}></List>
+      return <List listItems={items} deleteItem={deletelist}></List>
       case 'pay':
         return <Pay></Pay>
       

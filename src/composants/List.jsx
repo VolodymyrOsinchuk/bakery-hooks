@@ -1,5 +1,6 @@
 import React from "react";
 import { 
+  Button,
   Paper,
   Table, 
   TableBody, 
@@ -8,17 +9,26 @@ import {
   TableHead, 
   TableRow 
 } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
 
-export default function List (props) {
-  console.log('props list', props);
+const useStyles = makeStyles({
+  table: {
+    maxWidth: 500,
+  }
+})
+
+export default function List (props, ) {
+  const classes = useStyles();
+  // console.log('props list', props);
 
   return (
-    <TableContainer component={Paper} style={{maxWidth: 300}}>
-      <Table style={{maxWidth: 300}}>
+    <TableContainer component={Paper} className={classes.table}>
+      <Table className={classes.table}>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell>Price</TableCell>
+            <TableCell>Price €</TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -28,17 +38,21 @@ export default function List (props) {
                 {row.name}
               </TableCell>
               <TableCell>
-                {row.price}
+                {row.price} €
+              </TableCell>
+              <TableCell>
+               <Button 
+                color="secondary"
+                variant="contained"
+                onClick={() => {props.deleteItem(index)}}
+               >
+                 Delete
+               </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
-    // <ul>
-    //   {props.listItems.map((curr, index) => {
-    //     return (<li key={index}>{curr.name} - {curr.price}</li>)
-    //   })} 
-    // </ul>
   );
 };
