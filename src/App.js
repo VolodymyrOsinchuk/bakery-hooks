@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { makeStyles} from "@material-ui/core/styles"
-import ButtonMat from "./composants/ButtonMat";
-import Add from "./composants/Add";
-import List from "./composants/List";
-import Pay from "./composants/Pay";
 import { 
   ButtonGroup, 
   Grid 
 } from "@material-ui/core";
 
+import ButtonMat from "./composants/ButtonMat";
+import Add from "./composants/Add";
+import List from "./composants/List";
+import Pay from "./composants/Pay";
 // import './App.css';
 
 const useStyle = makeStyles((theme) => ({
@@ -51,7 +51,7 @@ function App() {
       case 'list':
       return <List listItems={items} deleteItem={deletelist}></List>
       case 'pay':
-        return <Pay></Pay>
+        return <Pay items={items}></Pay>
       
       default:
         break;

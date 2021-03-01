@@ -3,32 +3,26 @@ import React, {useState, useEffect} from "react";
 
 export default function SimpleCard (props) {
   const imageUrl = "./images/item.png";
+  const URLimage = `https://raw.githubusercontent.com/konexio/digitous-assest/main/bakery/${props.itemName}.png`;
   // const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(imageUrl);
 
-  console.log('image Card', image);
-
-  const URLimage = `https://github.com/konexio/digitous-assest/blob/main/bakery/${props.itemName}.png`;
-
-  console.log('URLimage Card', URLimage);
-
-
-  useEffect(() => {
-    const loadImage = async () => {
-      const response = await fetch(URLimage, {mode: "no-cors"});
-      const data = await response.blob();
-      setImage(
-        image
-      );
-      console.log("response", response);
-      console.log("data",data);
-    }
-    loadImage();
-  }, [])
-
+  console.log('props Card', props);
  
+  useEffect(() => {
+    try {
+      fetch(URLimage)
+      .then(res => res.blob())
+      .then(res => {
+        setImage(URLimage)
+      })
+    } catch (error) {
+      console.error('error is: ', error.message)
+    }
+  }, [URLimage]);
+
   return (
-    <div>
+    <>
       <img 
         style={{width: '300px'}}
         alt="croissant" 
@@ -36,15 +30,8 @@ export default function SimpleCard (props) {
         onClick={() => {
           props.onClick(props.itemName, props.price)
         }}
+
       />
-      {/* <h1>Photos</h1>
-      {loading ? (
-        "Loading ..."
-      ) : (
-        <ul>
-      <img src={imageUrl} alt="croissant"/>
-        </ul>
-      )} */}
-    </div>
+    </>
   );
 };

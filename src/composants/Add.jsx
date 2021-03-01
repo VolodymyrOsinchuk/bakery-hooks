@@ -14,7 +14,6 @@ export default function Add (props) {
   // console.log('price', price);
   // console.log('props Add >>>>>>', props);
 
-
   const updateItemName = (event) => {
     console.log('updateItemName >>>',)
     setProductName( event.target.value)
