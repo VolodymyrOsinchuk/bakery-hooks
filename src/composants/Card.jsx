@@ -24,7 +24,7 @@ export default function SimpleCard (props) {
   return (
     <>
       <img 
-        style={{width: '300px'}}
+        style={{width: '300px', padding: 20}}
         alt="croissant" 
         src={image}
         onClick={() => {

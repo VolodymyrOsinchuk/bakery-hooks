@@ -10,10 +10,6 @@ export default function Add (props) {
   const [productName, setProductName] = useState("");
   const [price, setPrice] = useState(1);
 
-  // console.log('productName is: ', productName);
-  // console.log('price', price);
-  // console.log('props Add >>>>>>', props);
-
   const updateItemName = (event) => {
     console.log('updateItemName >>>',)
     setProductName( event.target.value)
