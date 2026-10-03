@@ -1,53 +1,130 @@
-import { useState, useEffect } from 'react'
-import { Card, CardMedia, CardActionArea } from '@mui/material'
-import { createApi } from 'unsplash-js'
-import imageUrl from '../images/item.png'
-const apiKey = process.env.REACT_APP_UNSPLASH_API_KEY
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardActionArea,
+  CardContent,
+  CardMedia,
+  Typography,
+} from "@mui/material";
 
-// Remplace avec ta clé API Unsplash
-const unsplash = createApi({
-  accessKey: apiKey,
-})
+import imageUrl from "../images/item.png";
 
-export default function SimpleCard({ itemName, price, onClick }) {
-  const [image, setImage] = useState(imageUrl)
+const UNSPLASH_ACCESS_KEY = process.env.REACT_APP_UNSPLASH_API_KEY;
 
-  // Fonction pour récupérer l'image d'Unsplash
+export default function SimpleCard({ item, onSelect }) {
+  const [image, setImage] = useState(imageUrl);
+
   useEffect(() => {
-    const loadImage = async () => {
-      try {
-        const { response } = await unsplash.search.getPhotos({
-          query: `${itemName}`,
-          page: 1,
-          perPage: 10,
-        })
+    let cancelled = false;
 
-        if (response.results.length > 0) {
-          // Si une image correspondante est trouvée, utiliser l'URL de la première image
-          setImage(response.results[0].urls.small)
+    const loadImage = async () => {
+      if (!UNSPLASH_ACCESS_KEY) {
+        console.warn("REACT_APP_UNSPLASH_API_KEY est absente.");
+        return;
+      }
+
+      if (!item?.name?.trim()) {
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams({
+          query: item.name,
+          page: "1",
+          per_page: "1",
+          client_id: UNSPLASH_ACCESS_KEY,
+        });
+
+        const response = await fetch(
+          `https://api.unsplash.com/search/photos?${params}`,
+        );
+
+        if (!response.ok) {
+          throw new Error(`Unsplash API : ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (cancelled) {
+          return;
+        }
+
+        const firstImage = data.results?.[0];
+
+        if (firstImage?.urls?.small) {
+          setImage(firstImage.urls.small);
         } else {
-          // Si aucune image n'est trouvée, utiliser l'image par défaut
-          setImage(imageUrl)
+          setImage(imageUrl);
         }
       } catch (error) {
-        console.error("Erreur lors du chargement de l'image:", error)
-        setImage(imageUrl) // Si une erreur se produit, utiliser l'image par défaut
-      }
-    }
+        if (!cancelled) {
+          console.error("Erreur lors du chargement de l'image :", error);
 
-    loadImage()
-  }, [itemName]) // Le hook se déclenche à chaque changement de itemName
+          setImage(imageUrl);
+        }
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item?.name]);
 
   return (
-    <Card sx={{ maxWidth: 345, m: 2 }}>
-      <CardActionArea onClick={() => onClick(itemName, price)}>
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <CardActionArea
+        onClick={() => onSelect(item)}
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "stretch",
+        }}
+      >
+        {/* IMAGE */}
         <CardMedia
           component="img"
-          sx={{ width: 300, padding: 2 }}
+          height="220"
           image={image}
-          alt={itemName}
+          alt={item.name}
+          sx={{
+            objectFit: "contain",
+            p: 2,
+          }}
         />
+
+        {/* INFORMATIONS */}
+        <CardContent>
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{
+              fontWeight: "bold",
+              mb: 1,
+            }}
+          >
+            {item.name}
+          </Typography>
+
+          <Typography
+            variant="h6"
+            color="primary"
+            sx={{
+              fontWeight: "bold",
+            }}
+          >
+            {Number(item.price).toFixed(2)} €
+          </Typography>
+        </CardContent>
       </CardActionArea>
     </Card>
-  )
+  );
 }

@@ -1,81 +1,126 @@
-import React, { useState } from 'react'
-import { ButtonGroup, Box, Container, Paper, Typography } from '@mui/material'
-import Grid from '@mui/material/Grid2'
+import { useState } from "react";
+import { Box, ButtonGroup, Container, Paper, Typography } from "@mui/material";
 
-import ButtonMat from './components/ButtonMat'
-import Add from './components/Add'
-import List from './components/List'
-import Pay from './components/Pay'
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const names = ['add', 'list', 'pay']
+import Add from "./components/Add";
+import ButtonMat from "./components/ButtonMat";
+import List from "./components/List";
+import Pay from "./components/Pay";
+
+const TABS = [
+  { id: "add", label: "Ajouter" },
+  { id: "list", label: "Liste" },
+  { id: "pay", label: "Paiement" },
+];
 
 function App() {
-  const [items, setItems] = useState([])
-  const [activeTab, setActiveTab] = useState(names[0])
+  const [items, setItems] = useState([]);
+  const [activeTab, setActiveTab] = useState("add");
 
-  const add = (name, price) => {
-    if (!name) return // Évite d'ajouter des éléments sans nom
+  const clearItems = () => {
+    setItems([]);
+  };
+  const addItem = (name, price) => {
+    const trimmedName = name.trim();
 
-    const obj = {
-      name: name,
-      price: price,
+    if (!trimmedName) {
+      toast.warning("Veuillez saisir un nom de produit.");
+      return false;
     }
 
-    // Crée un nouveau tableau plutôt que de modifier le tableau existant
-    const newItems = [...items, obj]
-    setItems(newItems)
-  }
+    const numericPrice = Number(price);
 
-  const deleteList = (index) => {
-    const newItems = [...items]
-    newItems.splice(index, 1)
-    setItems(newItems)
-  }
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+      toast.warning("Veuillez saisir un prix valide.");
+      return false;
+    }
+
+    const newItem = {
+      id: crypto.randomUUID(),
+      name: trimmedName,
+      price: numericPrice,
+    };
+
+    setItems((currentItems) => [...currentItems, newItem]);
+
+    toast.success(`"${trimmedName}" a été ajouté.`);
+
+    return true;
+  };
+
+  const deleteItem = (id) => {
+    const item = items.find((item) => item.id === id);
+
+    if (!item) {
+      return;
+    }
+
+    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+
+    toast.info(`"${item.name}" a été supprimé.`);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'add':
-        return <Add addItem={add} />
-      case 'list':
-        return <List listItems={items} deleteItem={deleteList} />
-      case 'pay':
-        return <Pay items={items} />
+      case "add":
+        return <Add onAdd={addItem} />;
+
+      case "list":
+        return <List items={items} onDelete={deleteItem} />;
+
+      case "pay":
+        return <Pay items={items} onPaymentComplete={clearItems} />;
+
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
-    <Container maxWidth="lg">
-      <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-        <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
-          Bakery Manager
-        </Typography>
+    <>
+      <Container maxWidth="lg">
+        <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+          <Typography variant="h4" component="h1" align="center" sx={{ mb: 4 }}>
+            Bakery Manager
+          </Typography>
 
-        <Box sx={{ mb: 3 }}>
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Box display="flex" justifyContent="center">
-                <ButtonGroup aria-label="navigation buttons">
-                  {names.map((name) => (
-                    <ButtonMat
-                      key={name}
-                      onClick={() => setActiveTab(name)}
-                      isSelected={activeTab === name}
-                    >
-                      {name.charAt(0).toUpperCase() + name.slice(1)}
-                    </ButtonMat>
-                  ))}
-                </ButtonGroup>
-              </Box>
-            </Grid>
+          <Box
+            sx={{
+              mb: 3,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <ButtonGroup aria-label="Navigation principale">
+              {TABS.map((tab) => (
+                <ButtonMat
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  isSelected={activeTab === tab.id}
+                >
+                  {tab.label}
+                </ButtonMat>
+              ))}
+            </ButtonGroup>
+          </Box>
 
-            <Grid size={12}>{renderContent()}</Grid>
-          </Grid>
-        </Box>
-      </Paper>
-    </Container>
-  )
+          {renderContent()}
+        </Paper>
+      </Container>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
+      />
+    </>
+  );
 }
 
-export default App
+export default App;

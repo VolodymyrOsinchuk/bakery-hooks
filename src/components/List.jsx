@@ -1,52 +1,77 @@
-import React from 'react'
+// components/List.jsx
+
+import { Button, Typography } from "@mui/material";
+
+import { Paper } from "@mui/material";
 import {
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-} from '@mui/material'
+} from "@mui/material";
 
-export default function List({ listItems, deleteItem }) {
+export default function List({ items, onDelete }) {
+  if (items.length === 0) {
+    return (
+      <Paper
+        sx={{
+          p: 4,
+          textAlign: "center",
+          maxWidth: 700,
+          mx: "auto",
+        }}
+      >
+        <Typography variant="h6" color="text.secondary">
+          Aucun produit dans la liste.
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Ajoutez votre premier produit depuis l'onglet « Ajouter ».
+        </Typography>
+      </Paper>
+    );
+  }
+
   return (
     <TableContainer
       component={Paper}
-      sx={{ maxWidth: 500, mx: 'auto', bgcolor: '#e0f3f3' }}
+      sx={{
+        maxWidth: 700,
+        mx: "auto",
+        bgcolor: "#e0f3f3",
+      }}
     >
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Price €</TableCell>
-            <TableCell></TableCell>
+            <TableCell>Nom</TableCell>
+            <TableCell>Prix</TableCell>
+            <TableCell align="right">Action</TableCell>
           </TableRow>
         </TableHead>
+
         <TableBody>
-          {listItems.map((row, index) => {
-            const { name, price } = row
-            return (
-              <TableRow key={index}>
-                <TableCell>{name}</TableCell>
-                <TableCell>{price} €</TableCell>
-                <TableCell>
-                  <Button
-                    color="error"
-                    variant="contained"
-                    onClick={() => {
-                      deleteItem(index)
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })}
+          {items.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell>{item.name}</TableCell>
+
+              <TableCell>{Number(item.price).toFixed(2)} €</TableCell>
+
+              <TableCell align="right">
+                <Button
+                  color="error"
+                  variant="contained"
+                  onClick={() => onDelete(item.id)}
+                >
+                  Supprimer
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </TableContainer>
-  )
+  );
 }

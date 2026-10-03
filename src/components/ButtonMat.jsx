@@ -1,17 +1,16 @@
-import React from 'react'
-import { Button } from '@mui/material'
+// components/ButtonMat.jsx
 
-export default function ButtonMat(props) {
+import { Button } from "@mui/material";
+
+export default function ButtonMat({ children, onClick, isSelected = false }) {
   return (
-    <div>
-      <Button
-        onClick={props.onClick}
-        type="button"
-        variant="contained"
-        color={props.isSelected ? 'primary' : 'inherit'}
-      >
-        {props.children}
-      </Button>
-    </div>
-  )
+    <Button
+      type="button"
+      onClick={onClick}
+      variant="contained"
+      color={isSelected ? "primary" : "inherit"}
+    >
+      {children}
+    </Button>
+  );
 }

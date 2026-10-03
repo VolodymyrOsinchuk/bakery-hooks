@@ -1,53 +1,74 @@
-import React, { useState } from 'react'
-import { Button, Slider, TextField, Typography } from '@mui/material'
+// components/Add.jsx
 
-export default function Add({ addItem }) {
-  const [productName, setProductName] = useState('')
-  const [price, setPrice] = useState(1)
+import { useState } from "react";
+import { Box, Button, Slider, TextField, Typography } from "@mui/material";
 
-  const updateItemName = (event) => {
-    setProductName(event.target.value)
-  }
+const MIN_PRICE = 1;
+const MAX_PRICE = 10;
 
-  const updatePrice = (event, newPrice) => {
-    setPrice(newPrice)
-  }
+export default function Add({ onAdd }) {
+  const [productName, setProductName] = useState("");
+  const [price, setPrice] = useState(MIN_PRICE);
 
-  const click = () => {
-    addItem(productName, price)
-  }
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const success = onAdd(productName, price);
+
+    if (success) {
+      setProductName("");
+      setPrice(MIN_PRICE);
+    }
+  };
 
   return (
-    <div>
-      <form>
+    <Box>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          display: "flex",
+          gap: 2,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <TextField
+          label="Nom du produit"
           variant="outlined"
-          onChange={updateItemName}
           value={productName}
-          placeholder="Nom du produit"
-          sx={{ mr: 2 }}
+          onChange={(event) => setProductName(event.target.value)}
+          required
+          fullWidth
+          sx={{ maxWidth: 400 }}
         />
+
         <Button
+          type="submit"
           variant="contained"
-          color="primary"
           size="large"
-          onClick={click}
-          sx={{ height: 55 }}
+          sx={{ height: 56 }}
         >
-          Add
+          Ajouter
         </Button>
-      </form>
-      <Typography sx={{ my: 2 }}>{price} €</Typography>
-      <Slider
-        value={price}
-        min={1}
-        max={10}
-        step={1}
-        valueLabelDisplay="auto"
-        marks={true}
-        sx={{ width: 500 }}
-        onChange={updatePrice}
-      />
-    </div>
-  )
+      </Box>
+
+      <Box sx={{ mt: 3, maxWidth: 500 }}>
+        <Typography gutterBottom>
+          Prix : <strong>{price.toFixed(2)} €</strong>
+        </Typography>
+
+        <Slider
+          value={price}
+          min={MIN_PRICE}
+          max={MAX_PRICE}
+          step={0.5}
+          valueLabelDisplay="auto"
+          marks
+          onChange={(_, newPrice) => setPrice(newPrice)}
+          aria-label="Prix du produit"
+        />
+      </Box>
+    </Box>
+  );
 }
