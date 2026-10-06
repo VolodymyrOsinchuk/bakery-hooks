@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import {
+  Box,
   Card,
   CardActionArea,
   CardContent,
   CardMedia,
+  Chip,
   Typography,
 } from "@mui/material";
+import AddCircleRounded from "@mui/icons-material/AddCircleRounded";
 
 import imageUrl from "../images/item.png";
+import { euro } from "../utils/format";
 
 const UNSPLASH_ACCESS_KEY = process.env.REACT_APP_UNSPLASH_API_KEY;
 
 export default function SimpleCard({ item, onSelect }) {
   const [image, setImage] = useState(imageUrl);
+  const isFallback = image === imageUrl;
 
   useEffect(() => {
     let cancelled = false;
@@ -51,15 +56,10 @@ export default function SimpleCard({ item, onSelect }) {
 
         const firstImage = data.results?.[0];
 
-        if (firstImage?.urls?.small) {
-          setImage(firstImage.urls.small);
-        } else {
-          setImage(imageUrl);
-        }
+        setImage(firstImage?.urls?.small ?? imageUrl);
       } catch (error) {
         if (!cancelled) {
           console.error("Erreur lors du chargement de l'image :", error);
-
           setImage(imageUrl);
         }
       }
@@ -76,8 +76,17 @@ export default function SimpleCard({ item, onSelect }) {
     <Card
       sx={{
         height: "100%",
-        display: "flex",
-        flexDirection: "column",
+        transition:
+          "transform .15s ease, border-color .15s ease, box-shadow .15s ease",
+        "&:hover": {
+          transform: "translateY(-3px)",
+          borderColor: "secondary.main",
+          boxShadow: "0 14px 30px -18px rgba(42, 29, 68, 0.5)",
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          transition: "none",
+          "&:hover": { transform: "none" },
+        },
       }}
     >
       <CardActionArea
@@ -87,42 +96,54 @@ export default function SimpleCard({ item, onSelect }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "stretch",
+          justifyContent: "flex-start",
         }}
       >
-        {/* IMAGE */}
-        <CardMedia
-          component="img"
-          height="220"
-          image={image}
-          alt={item.name}
-          sx={{
-            objectFit: "contain",
-            p: 2,
-          }}
-        />
-
-        {/* INFORMATIONS */}
-        <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
+        <Box sx={{ position: "relative", bgcolor: "background.default" }}>
+          <CardMedia
+            component="img"
+            height="150"
+            image={image}
+            alt={item.name}
             sx={{
-              fontWeight: "bold",
-              mb: 1,
+              objectFit: isFallback ? "contain" : "cover",
+              p: isFallback ? 2 : 0,
             }}
+          />
+
+          <Chip
+            size="small"
+            color="secondary"
+            label={euro.format(Number(item.price))}
+            sx={{
+              position: "absolute",
+              right: 10,
+              bottom: 10,
+              fontWeight: 700,
+            }}
+          />
+        </Box>
+
+        <CardContent
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1,
+            py: 1.5,
+          }}
+        >
+          <Typography
+            variant="subtitle1"
+            component="h3"
+            noWrap
+            sx={{ fontWeight: 600, minWidth: 0 }}
           >
             {item.name}
           </Typography>
 
-          <Typography
-            variant="h6"
-            color="primary"
-            sx={{
-              fontWeight: "bold",
-            }}
-          >
-            {Number(item.price).toFixed(2)} €
-          </Typography>
+          <AddCircleRounded color="primary" />
         </CardContent>
       </CardActionArea>
     </Card>

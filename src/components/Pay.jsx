@@ -1,14 +1,26 @@
 import { useMemo, useState } from "react";
-import { Box, Button, IconButton, Paper, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Chip,
+  Divider,
+  IconButton,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { toast } from "react-toastify";
 
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import ShoppingBagOutlined from "@mui/icons-material/ShoppingBagOutlined";
 
 import SimpleCard from "./Card";
 import Payment from "./Payment";
+import SummaryRow from "./SummaryRow";
+import { euro } from "../utils/format";
 
 const ECO_TAX_PER_ITEM = 0.03;
 const VAT_RATE = 0.2;
@@ -17,91 +29,58 @@ export default function Pay({ items, onPaymentComplete }) {
   const [basket, setBasket] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
 
-  // Ajouter un produit
+  // Ajouter un produit (ou +1 s'il est déjà dans le panier)
   const handleSelect = (item) => {
     const existingItem = basket.find((basketItem) => basketItem.id === item.id);
 
     if (existingItem) {
       const newQuantity = existingItem.quantity + 1;
 
-      setBasket((currentBasket) =>
-        currentBasket.map((basketItem) =>
+      setBasket((current) =>
+        current.map((basketItem) =>
           basketItem.id === item.id
-            ? {
-                ...basketItem,
-                quantity: newQuantity,
-              }
+            ? { ...basketItem, quantity: newQuantity }
             : basketItem,
         ),
       );
 
       toast.info(`${item.name} : quantité ${newQuantity}.`);
-
       return;
     }
 
-    setBasket((currentBasket) => [
-      ...currentBasket,
-      {
-        ...item,
-        quantity: 1,
-      },
-    ]);
-
+    setBasket((current) => [...current, { ...item, quantity: 1 }]);
     toast.success(`${item.name} ajouté au panier.`);
   };
 
-  // Augmenter
   const increaseQuantity = (id) => {
-    const item = basket.find((item) => item.id === id);
+    const item = basket.find((basketItem) => basketItem.id === id);
 
-    if (!item) {
-      return;
+    if (item) {
+      handleSelect(item);
     }
-
-    const newQuantity = item.quantity + 1;
-
-    setBasket((currentBasket) =>
-      currentBasket.map((basketItem) =>
-        basketItem.id === id
-          ? {
-              ...basketItem,
-              quantity: newQuantity,
-            }
-          : basketItem,
-      ),
-    );
-
-    toast.info(`${item.name} : quantité ${newQuantity}.`);
   };
 
-  // Diminuer
   const decreaseQuantity = (id) => {
-    const item = basket.find((item) => item.id === id);
+    const item = basket.find((basketItem) => basketItem.id === id);
 
     if (!item) {
       return;
     }
 
     if (item.quantity === 1) {
-      setBasket((currentBasket) =>
-        currentBasket.filter((basketItem) => basketItem.id !== id),
+      setBasket((current) =>
+        current.filter((basketItem) => basketItem.id !== id),
       );
-
       toast.info(`${item.name} a été retiré du panier.`);
-
       return;
     }
 
     const newQuantity = item.quantity - 1;
 
-    setBasket((currentBasket) =>
-      currentBasket.map((basketItem) =>
+    setBasket((current) =>
+      current.map((basketItem) =>
         basketItem.id === id
-          ? {
-              ...basketItem,
-              quantity: newQuantity,
-            }
+          ? { ...basketItem, quantity: newQuantity }
           : basketItem,
       ),
     );
@@ -109,7 +88,6 @@ export default function Pay({ items, onPaymentComplete }) {
     toast.info(`${item.name} : quantité ${newQuantity}.`);
   };
 
-  // Supprimer complètement
   const removeItem = (id) => {
     const item = basket.find((basketItem) => basketItem.id === id);
 
@@ -117,23 +95,19 @@ export default function Pay({ items, onPaymentComplete }) {
       return;
     }
 
-    setBasket((currentBasket) =>
-      currentBasket.filter((basketItem) => basketItem.id !== id),
+    setBasket((current) =>
+      current.filter((basketItem) => basketItem.id !== id),
     );
-
     toast.warning(`${item.name} a été supprimé du panier.`);
   };
 
-  // Bouton "Procéder au paiement"
   const handleStartPayment = () => {
     if (basket.length === 0) {
       toast.warning("Votre panier est vide. Ajoutez au moins un produit.");
-
       return;
     }
 
     toast.success("Commande prête pour le paiement.");
-
     setShowPayment(true);
   };
 
@@ -143,28 +117,17 @@ export default function Pay({ items, onPaymentComplete }) {
     setShowPayment(false);
   };
 
-  // Calculs
   const calculations = useMemo(() => {
     const totalHT = basket.reduce(
       (total, item) => total + Number(item.price) * item.quantity,
       0,
     );
-
     const quantity = basket.reduce((total, item) => total + item.quantity, 0);
-
     const ecoTax = quantity * ECO_TAX_PER_ITEM;
-
     const vat = totalHT * VAT_RATE;
-
     const totalTTC = totalHT + ecoTax + vat;
 
-    return {
-      totalHT,
-      quantity,
-      ecoTax,
-      vat,
-      totalTTC,
-    };
+    return { totalHT, quantity, ecoTax, vat, totalTTC };
   }, [basket]);
 
   if (showPayment) {
@@ -181,161 +144,198 @@ export default function Pay({ items, onPaymentComplete }) {
     );
   }
 
-  return (
-    <Box sx={{ p: 2 }}>
-      {/* PRODUITS */}
-      <Typography variant="h5" gutterBottom>
-        Sélectionnez vos produits
-      </Typography>
+  if (items.length === 0) {
+    return (
+      <Box sx={{ py: 6, textAlign: "center" }}>
+        <Typography variant="h6">Aucun produit à vendre</Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          Ajoutez des produits depuis l'onglet « Ajouter » pour ouvrir la
+          caisse.
+        </Typography>
+      </Box>
+    );
+  }
 
-      <Grid container spacing={2}>
-        {items.map((item) => (
-          <Grid key={item.id} size={{ xs: 12, sm: 6, md: 4 }}>
-            <SimpleCard item={item} onSelect={handleSelect} />
-          </Grid>
-        ))}
+  return (
+    <Grid container spacing={3}>
+      {/* PRODUITS */}
+      <Grid size={{ xs: 12, md: 7 }}>
+        <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+          Produits
+        </Typography>
+
+        <Grid container spacing={2}>
+          {items.map((item) => (
+            <Grid key={item.id} size={{ xs: 6, sm: 4, md: 6 }}>
+              <SimpleCard item={item} onSelect={handleSelect} />
+            </Grid>
+          ))}
+        </Grid>
       </Grid>
 
       {/* PANIER */}
-      <Paper
-        elevation={3}
-        sx={{
-          p: 3,
-          mt: 4,
-          maxWidth: 650,
-        }}
-      >
-        <Typography variant="h6" gutterBottom>
-          🛒 Votre panier
-        </Typography>
+      <Grid size={{ xs: 12, md: 5 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2.5,
+            borderRadius: 3,
+            position: { md: "sticky" },
+            top: { md: 24 },
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mb: 1, alignItems: "center" }}
+          >
+            <ShoppingBagOutlined color="primary" />
+            <Typography variant="h6" component="h2" sx={{ flex: 1 }}>
+              Panier
+            </Typography>
+            {basket.length > 0 && (
+              <Chip
+                size="small"
+                color="primary"
+                label={calculations.quantity}
+              />
+            )}
+          </Stack>
 
-        {basket.length === 0 ? (
-          <Typography color="text.secondary">
-            Aucun produit sélectionné.
-          </Typography>
-        ) : (
-          basket.map((item) => (
-            <Box
-              key={item.id}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 2,
-                py: 1.5,
-                borderBottom: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              {/* NOM + PRIX */}
-              <Box sx={{ flex: 1 }}>
-                <Typography fontWeight="bold">{item.name}</Typography>
-
-                <Typography variant="body2" color="text.secondary">
-                  {Number(item.price).toFixed(2)} € / unité
-                </Typography>
-              </Box>
-
-              {/* QUANTITÉ */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={() => decreaseQuantity(item.id)}
-                >
-                  <RemoveIcon />
-                </IconButton>
-
-                <Typography
+          {basket.length === 0 ? (
+            <Typography color="text.secondary" sx={{ py: 3 }}>
+              Touchez un produit pour l'ajouter.
+            </Typography>
+          ) : (
+            <>
+              {basket.map((item) => (
+                <Box
+                  key={item.id}
                   sx={{
-                    minWidth: 30,
-                    textAlign: "center",
-                    fontWeight: "bold",
+                    py: 1.5,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
-                  {item.quantity}
-                </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ justifyContent: "space-between" }}
+                  >
+                    <Typography sx={{ fontWeight: 600 }}>
+                      {item.name}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {euro.format(Number(item.price) * item.quantity)}
+                    </Typography>
+                  </Stack>
 
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={() => increaseQuantity(item.id)}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Box>
+                  <Stack
+                    direction="row"
+                    sx={{
+                      mt: 0.5,
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {euro.format(Number(item.price))} / unité
+                    </Typography>
 
-              {/* TOTAL PRODUIT */}
-              <Typography
-                sx={{
-                  minWidth: 80,
-                  textAlign: "right",
-                  fontWeight: "bold",
-                }}
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <Stack
+                        direction="row"
+                        sx={{
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 99,
+                          alignItems: "center",
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          aria-label={`Retirer un ${item.name}`}
+                          onClick={() => decreaseQuantity(item.id)}
+                        >
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
+
+                        <Typography
+                          sx={{
+                            minWidth: 24,
+                            textAlign: "center",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {item.quantity}
+                        </Typography>
+
+                        <IconButton
+                          size="small"
+                          aria-label={`Ajouter un ${item.name}`}
+                          onClick={() => increaseQuantity(item.id)}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+
+                      <IconButton
+                        size="small"
+                        color="error"
+                        aria-label={`Supprimer ${item.name} du panier`}
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <DeleteOutlineRounded fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                </Box>
+              ))}
+
+              <Stack spacing={0.75} sx={{ mt: 2 }}>
+                <SummaryRow
+                  label="Total HT"
+                  value={euro.format(calculations.totalHT)}
+                />
+                <SummaryRow
+                  label="Éco-taxe"
+                  value={euro.format(calculations.ecoTax)}
+                />
+                <SummaryRow
+                  label={`TVA (${VAT_RATE * 100} %)`}
+                  value={euro.format(calculations.vat)}
+                />
+                <Divider sx={{ my: 1 }} />
+                <SummaryRow
+                  strong
+                  label="Total TTC"
+                  value={euro.format(calculations.totalTTC)}
+                />
+              </Stack>
+
+              <Button
+                variant="contained"
+                color="secondary"
+                size="large"
+                fullWidth
+                sx={{ mt: 3, height: 52 }}
+                onClick={handleStartPayment}
               >
-                {(Number(item.price) * item.quantity).toFixed(2)} €
-              </Typography>
-
-              {/* SUPPRIMER */}
-              <IconButton color="error" onClick={() => removeItem(item.id)}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))
-        )}
-
-        {/* CALCULS */}
-        {basket.length > 0 && (
-          <Box
-            sx={{
-              mt: 3,
-              pt: 2,
-              borderTop: "2px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Typography>Quantité : {calculations.quantity}</Typography>
-
-            <Typography>
-              Total HT : {calculations.totalHT.toFixed(2)} €
-            </Typography>
-
-            <Typography>
-              Éco-taxe : {calculations.ecoTax.toFixed(2)} €
-            </Typography>
-
-            <Typography>
-              TVA (20 %) : {calculations.vat.toFixed(2)} €
-            </Typography>
-
-            <Typography
-              variant="h5"
-              sx={{
-                mt: 2,
-                fontWeight: "bold",
-              }}
-            >
-              Total TTC : {calculations.totalTTC.toFixed(2)} €
-            </Typography>
-
-            <Button
-              variant="contained"
-              color="success"
-              fullWidth
-              sx={{ mt: 3 }}
-              onClick={handleStartPayment}
-            >
-              Procéder au paiement
-            </Button>
-          </Box>
-        )}
-      </Paper>
-    </Box>
+                Procéder au paiement
+              </Button>
+            </>
+          )}
+        </Paper>
+      </Grid>
+    </Grid>
   );
 }

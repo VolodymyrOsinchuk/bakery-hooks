@@ -2,17 +2,29 @@ import { useState } from "react";
 import {
   Box,
   Button,
-  Paper,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  Typography,
+  CircularProgress,
   Divider,
-  Alert,
+  Paper,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from "@mui/material";
 import { toast } from "react-toastify";
+
+import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
+import CreditCardRounded from "@mui/icons-material/CreditCardRounded";
+import PaymentsOutlined from "@mui/icons-material/PaymentsOutlined";
+import ReceiptLongRounded from "@mui/icons-material/ReceiptLongRounded";
+
+import SummaryRow from "./SummaryRow";
+import { euro } from "../utils/format";
+
+const METHODS = [
+  { value: "card", label: "Carte", icon: <CreditCardRounded /> },
+  { value: "cash", label: "Espèces", icon: <PaymentsOutlined /> },
+  { value: "check", label: "Chèque", icon: <ReceiptLongRounded /> },
+];
 
 export default function Payment({
   basket,
@@ -24,146 +36,148 @@ export default function Payment({
   onCancel,
 }) {
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [processing, setProcessing] = useState(false);
   const [paymentDone, setPaymentDone] = useState(false);
 
   const handlePayment = () => {
+    setProcessing(true);
     toast.info("Traitement du paiement...");
 
-    setPaymentDone(true);
-
     setTimeout(() => {
+      setProcessing(false);
+      setPaymentDone(true);
       toast.success("Paiement accepté !");
 
-      onPaymentSuccess();
-    }, 1500);
+      setTimeout(onPaymentSuccess, 2500);
+    }, 1200);
   };
 
   if (paymentDone) {
+    const method = METHODS.find((m) => m.value === paymentMethod);
+
     return (
-      <Paper
-        elevation={3}
-        sx={{
-          maxWidth: 600,
-          mx: "auto",
-          p: 4,
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="h4" color="success.main" gutterBottom>
-          ✓ Paiement accepté
+      <Box sx={{ maxWidth: 480, mx: "auto", py: 4, textAlign: "center" }}>
+        <CheckCircleRounded color="success" sx={{ fontSize: 72 }} />
+
+        <Typography variant="h4" sx={{ mt: 1 }}>
+          Paiement accepté
         </Typography>
 
-        <Typography sx={{ mb: 2 }}>Merci pour votre achat !</Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          Merci pour votre achat ! Réglé par {method.label.toLowerCase()}.
+        </Typography>
 
-        <Typography variant="h5">{totalTTC.toFixed(2)} €</Typography>
-
-        <Alert severity="success" sx={{ mt: 3 }}>
-          Votre commande a été enregistrée.
-        </Alert>
-      </Paper>
+        <Typography
+          variant="h5"
+          sx={{ mt: 3, fontVariantNumeric: "tabular-nums" }}
+        >
+          {euro.format(totalTTC)}
+        </Typography>
+      </Box>
     );
   }
 
   return (
     <Paper
-      elevation={3}
-      sx={{
-        maxWidth: 600,
-        mx: "auto",
-        p: 4,
-      }}
+      variant="outlined"
+      sx={{ maxWidth: 560, mx: "auto", p: { xs: 2.5, md: 4 }, borderRadius: 3 }}
     >
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" component="h2">
         Paiement
       </Typography>
 
-      <Divider sx={{ mb: 3 }} />
-
-      {/* RÉSUMÉ */}
-      <Typography variant="h6" gutterBottom>
-        Résumé de la commande
+      <Typography color="text.secondary" sx={{ mt: 0.5, mb: 3 }}>
+        Vérifiez la commande, puis choisissez le moyen de paiement.
       </Typography>
 
-      {basket.map((item) => (
-        <Box
-          key={item.id}
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 1,
-          }}
-        >
-          <Typography>
-            {item.name} × {item.quantity}
-          </Typography>
-
-          <Typography>{(item.price * item.quantity).toFixed(2)} €</Typography>
-        </Box>
-      ))}
+      {/* RÉSUMÉ */}
+      <Stack spacing={1}>
+        {basket.map((item) => (
+          <SummaryRow
+            key={item.id}
+            label={`${item.name} × ${item.quantity}`}
+            value={euro.format(Number(item.price) * item.quantity)}
+          />
+        ))}
+      </Stack>
 
       <Divider sx={{ my: 2 }} />
 
-      <Box>
-        <Typography>Total HT : {totalHT.toFixed(2)} €</Typography>
-
-        <Typography>Éco-taxe : {ecoTax.toFixed(2)} €</Typography>
-
-        <Typography>TVA : {vat.toFixed(2)} €</Typography>
-
-        <Typography variant="h6" sx={{ mt: 1 }}>
-          Total TTC : {totalTTC.toFixed(2)} €
-        </Typography>
-      </Box>
+      <Stack spacing={0.75}>
+        <SummaryRow label="Total HT" value={euro.format(totalHT)} />
+        <SummaryRow label="Éco-taxe" value={euro.format(ecoTax)} />
+        <SummaryRow label="TVA" value={euro.format(vat)} />
+        <Divider sx={{ my: 1 }} />
+        <SummaryRow strong label="Total TTC" value={euro.format(totalTTC)} />
+      </Stack>
 
       {/* MOYEN DE PAIEMENT */}
-      <FormControl sx={{ mt: 3 }}>
-        <FormLabel>Moyen de paiement</FormLabel>
+      <Typography sx={{ mt: 4, mb: 1.5, fontWeight: 600 }}>
+        Moyen de paiement
+      </Typography>
 
-        <RadioGroup
-          value={paymentMethod}
-          onChange={(event) => setPaymentMethod(event.target.value)}
-        >
-          <FormControlLabel
-            value="card"
-            control={<Radio />}
-            label="💳 Carte bancaire"
-          />
-
-          <FormControlLabel
-            value="cash"
-            control={<Radio />}
-            label="💶 Espèces"
-          />
-
-          <FormControlLabel
-            value="check"
-            control={<Radio />}
-            label="📝 Chèque"
-          />
-        </RadioGroup>
-      </FormControl>
+      <ToggleButtonGroup
+        exclusive
+        fullWidth
+        value={paymentMethod}
+        disabled={processing}
+        onChange={(_, value) => value && setPaymentMethod(value)}
+        aria-label="Moyen de paiement"
+        sx={{ gap: 1.5 }}
+      >
+        {METHODS.map((method) => (
+          <ToggleButton
+            key={method.value}
+            value={method.value}
+            sx={{
+              flexDirection: "column",
+              gap: 0.5,
+              py: 1.5,
+              borderRadius: "12px !important",
+              border: "1px solid !important",
+              borderColor: "divider !important",
+              "&.Mui-selected": {
+                bgcolor: "rgba(59, 42, 92, 0.08)",
+                color: "primary.main",
+                borderColor: "primary.main !important",
+              },
+            }}
+          >
+            {method.icon}
+            {method.label}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
 
       {/* ACTIONS */}
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          mt: 4,
-        }}
-      >
-        <Button variant="outlined" fullWidth onClick={onCancel}>
+      <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
+        <Button
+          variant="outlined"
+          fullWidth
+          size="large"
+          disabled={processing}
+          onClick={onCancel}
+          sx={{ height: 52 }}
+        >
           Retour
         </Button>
 
         <Button
           variant="contained"
-          color="success"
+          color="secondary"
           fullWidth
+          size="large"
+          disabled={processing}
           onClick={handlePayment}
+          sx={{ height: 52 }}
         >
-          Payer {totalTTC.toFixed(2)} €
+          {processing ? (
+            <CircularProgress size={22} color="inherit" />
+          ) : (
+            `Payer ${euro.format(totalTTC)}`
+          )}
         </Button>
-      </Box>
+      </Stack>
     </Paper>
   );
 }
